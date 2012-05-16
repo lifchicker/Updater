@@ -31,12 +31,12 @@ class UpdateClient : public QObject
 public:
     explicit UpdateClient(QObject *parent = nullptr);
     
-    bool        copyFile(const QString& locationFrom, const QString&locationTo, const QString& fileName);
-    bool        copyFile(const QString& locationFrom, const QString&locationTo, const QString& originalFileName, const QString& resultFileName);
-    bool        copyFiles(const QString& source, const QString& destination);
+    bool        copyFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    bool        copyFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
+    bool        copyFiles(const QString& srcDir, const QString& destDir);
     QString     downloadFile(const QUrl&);
-    bool        moveFile(const QString& locationFrom, const QString&locationTo, const QString& fileName);
-    bool        moveFile(const QString& locationFrom, const QString&locationTo, const QString& originalFileName, const QString& resultFileName);
+    bool        moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    bool        moveFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
     UpdateFile  readHeader(const QString&);
     void        readListOfFiles(const UpdateFile&);
     QString     readMainBinaryName(const QString&);

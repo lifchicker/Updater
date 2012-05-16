@@ -5,15 +5,15 @@ UpdateClient::UpdateClient(QObject *parent) :
 {
 }
 
-bool UpdateClient::copyFile(const QString &locationFrom, const QString &locationTo, const QString &fileName)
+bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const QString &fileName)
 {
 }
 
-bool UpdateClient::copyFile(const QString &locationFrom, const QString &locationTo, const QString &originalFileName, const QString &resultFileName)
+bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const QString &srcFileName, const QString &destFileName)
 {
 }
 
-bool UpdateClient::copyFiles(const QString &source, const QString &destination)
+bool UpdateClient::copyFiles(const QString &srcDir, const QString &destDir)
 {
 }
 
@@ -21,11 +21,11 @@ QString UpdateClient::downloadFile(const QUrl &)
 {
 }
 
-bool UpdateClient::moveFile(const QString &locationFrom, const QString &locationTo, const QString &fileName)
+bool UpdateClient::moveFile(const QString &srcDir, const QString &destDir, const QString &fileName)
 {
 }
 
-bool UpdateClient::moveFile(const QString &locationFrom, const QString &locationTo, const QString &originalFileName, const QString &resultFileName)
+bool UpdateClient::moveFile(const QString &srcDir, const QString &destDir, const QString &srcFileName, const QString &destFileName)
 {
 }
 

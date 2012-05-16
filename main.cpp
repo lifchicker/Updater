@@ -172,7 +172,6 @@ int main(int argc, char *argv[])
 
     //15. Copy all files from temp directory for result update to application
     // directory.
-
     updateClient.copyFiles(tempResultDirectory, applicationDirectory);
 
     return 0;

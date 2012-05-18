@@ -7,6 +7,10 @@
 #include <QUrl>
 #include <QVector>
 
+class QDir;
+class QXmlStreamReader;
+
+
 struct FileInfo
 {
     QString     fileName;   //file name with relative path
@@ -21,6 +25,7 @@ struct UpdateFile
     QByteArray          previousVersion;
     QString             platform;
     QUrl                source;
+    FileInfo            mainBinary;
     QVector<FileInfo>   files;
 };
 
@@ -29,25 +34,23 @@ class UpdateClient : public QObject
 {
     Q_OBJECT
 public:
-    explicit UpdateClient(QObject *parent = nullptr);
+    explicit UpdateClient(QObject *parent = 0);
     
-    bool        copyFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    inline bool copyFile(const QString& srcDir, const QString& destDir, const QString& fileName);
     bool        copyFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
-    bool        copyFiles(const QString& srcDir, const QString& destDir);
-    QString     downloadFile(const QUrl&);
-    bool        moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    bool        copyFiles(const QDir &srcDir, const QDir &destDir);
+    bool        downloadFile(const QUrl&url, const QString &destination, const QString &fileName);
+    bool        isFileValid(const QString& path, const FileInfo& fileInfo);
+    inline bool moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
     bool        moveFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
-    UpdateFile  readHeader(const QString&);
-    void        readListOfFiles(const UpdateFile&);
-    QString     readMainBinaryName(const QString&);
+    UpdateFile *readUpdateFile(const QString& fileName);
 
 signals:
     
 public slots:
 
 private:
-    void parseXml();
-
+    FileInfo   readFileInfo(QXmlStreamReader &xml);
 };
 
 #endif // UPDATECLIENT_H

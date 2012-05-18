@@ -3,11 +3,20 @@
 #include <QDir>
 #include <QProcess>
 
-#include "mainwindow.h"
-
 #include "updateclient.h"
 
 #define APPLICATION_INSTALLER_URL "http://korobka.in/"
+
+#define UPDATE_CURRENT_XML_READ_ERROR 1
+#define UPDATE_LATEST_XML_READ_ERROR  2
+
+void readUpdateFileErrorMessage()
+{
+    QMessageBox::critical(NULL,
+                          QObject::tr("Read file error"),
+                          QObject::tr("Update file reading error"),
+                          QMessageBox::Ok);
+}
 
 int main(int argc, char *argv[])
 {
@@ -17,24 +26,29 @@ int main(int argc, char *argv[])
 
     UpdateClient updateClient;
 
-    UpdateFile   updateCurrent;
-    UpdateFile   updateLatest;
-    UpdateFile   updateResulting;
+    UpdateFile   *updateCurrent;
+    UpdateFile   *updateLatest;
+    UpdateFile   *updateResulting;
 
     QString tempDirectory = QDir::tempPath() + QDir::separator() + "Korobka-update" + QDir::separator();
     QString tempResultDirectory = QDir::tempPath() + QDir::separator() + "Korobka-result-update" + QDir::separator();
     QString applicationDirectory = "";
 
-    QString mainBinaryName = updateClient.readMainBinaryName("update-current.xml");
+    updateCurrent = updateClient.readUpdateFile("update-current.xml");
+    if (!updateCurrent)
+    {
+        readUpdateFileErrorMessage();
+        return UPDATE_CURRENT_XML_READ_ERROR;
+    }
 
     //start the application
     QProcess * application = new QProcess();
-    application->start(mainBinaryName);
+    application->start(updateCurrent->mainBinary.fileName);
     if (!application->waitForStarted())
     {
-        QMessageBox::warning(nullptr,
-                             tr("Warning"),
-                             tr("Application doesn't started."),
+        QMessageBox::warning(NULL,
+                             QObject::tr("Warning"),
+                             QObject::tr("Application doesn't started."),
                              QMessageBox::Ok);
     }
 
@@ -42,23 +56,39 @@ int main(int argc, char *argv[])
     {
 
         //1.  Read header from update-current.xml from application directory
-        updateCurrent = updateClient.readHeader("update-current.xml");
+        if (!updateCurrent)
+        {
+            updateCurrent = updateClient.readUpdateFile("update-current.xml");
+            if (!updateCurrent)
+            {
+                readUpdateFileErrorMessage();
+                return UPDATE_CURRENT_XML_READ_ERROR;
+            }
+        }
 
         //2.  Download update.xml from
         //      <update><source>/<platform>/update.xml
         //    to temp directory and say it update-latest.xml
-        QString updateLatestFileName = updateClient.downloadFile(updateCurrent.source +
-                                                                 "/" + updateCurrent.platform +
-                                                                 "/update.xml");
+        QString updateLatestFileName = "update.xml";
+        updateClient.downloadFile(updateCurrent->source.toString() +
+                                  "/" + updateCurrent->platform,
+                                  tempDirectory,
+                                  updateLatestFileName);
+
         //3.  Read header from update-latest.xml
-        updateLatest = updateClient.readHeader(tempDirectory + updateLatestFileName);
+        updateLatest = updateClient.readUpdateFile(tempDirectory + updateLatestFileName);
+        if (!updateLatest)
+        {
+            readUpdateFileErrorMessage();
+            return UPDATE_LATEST_XML_READ_ERROR;
+        }
 
         //4.  Compare <currentVersion> from update-latest.xml and update-current.xml.
-        if (updateLatest.currentVersion == updateLatest.currentVersion)
+        if (updateLatest->currentVersion == updateLatest->currentVersion)
         {
-            //        QMessageBox::information(nullptr,
-            //                                 tr("No updates"),
-            //                                 tr("No updates."),
+            //        QMessageBox::information(NULL,
+            //                                 QObject::tr("No updates"),
+            //                                 QObject::tr("No updates."),
             //                                 QMessageBox::Ok);
 
             // if updating from previous versions
@@ -80,7 +110,7 @@ int main(int argc, char *argv[])
         //    update-latest.xml file.
         //    If versions are equal say update-latest.xml as update-resulting.xml and
         //    go to Step 7.
-        if (updateCurrent.currentVersion != updateLatest.previousVersion)
+        if (updateCurrent->currentVersion != updateLatest->previousVersion)
         {
             // put code for update from previous ( N times repeat) version
 
@@ -90,29 +120,35 @@ int main(int argc, char *argv[])
 
             //6.2.  Go to Step 3.
 
-            QMessageBox::critical(nullptr,
-                                  tr("Update is not incremental"),
-                                  tr("Current version is step aside from new version more then one update."
-                                     "Please, download and install full version of application from <a href=\""
-                                     APPLICATION_INSTALLER_URL
-                                     "\">"
-                                     APPLICATION_INSTALLER_URL
-                                     "</a>"),
+            QMessageBox::critical(NULL,
+                                  QObject::tr("Update is not incremental"),
+                                  QObject::tr("Current version is step aside from new version more then one update."
+                                              "Please, download and install full version of application from <a href=\""
+                                              APPLICATION_INSTALLER_URL
+                                              "\">"
+                                              APPLICATION_INSTALLER_URL
+                                              "</a>"),
                                   QMessageBox::Ok);
 
             //exit
             return 0;
         }
 
+        if (updateResulting)
+        {
+            delete updateResulting;
+            updateResulting = NULL;
+        }
         updateResulting = updateLatest;
+        updateLatest = NULL;
 
         //7.  If flag "installUpdates" is false, show dialog "New version found. Update?"
         //    and set flag to result of dialog choice.
         if (!installUpdates)
         {
-            installUpdates = QMessageBox::Yes == QMessageBox::question(nullptr,
-                                                                       tr("New version found"),
-                                                                       tr("New version is available. Update?"),
+            installUpdates = QMessageBox::Yes == QMessageBox::question(NULL,
+                                                                       QObject::tr("New version found"),
+                                                                       QObject::tr("New version is available. Update?"),
                                                                        QMessageBox::Yes | QMessageBox::No,
                                                                        QMessageBox::Yes);
 
@@ -124,53 +160,67 @@ int main(int argc, char *argv[])
             }
         }
 
-        //9.  Read list of files from update-resulting.xml
-        updateClient.readListOfFiles(updateResulting);
-
-        //10. For each file do
-        foreach(FileInfo file, updateResulting.files)
+        //9. For each file do
+        foreach(FileInfo file, updateResulting->files)
         {
             for (int i = 0; i < 3; i++)
             {
-                //10.1.  Download file from
+                //9.1.  Download file from
                 //  <update><source>/<platform>/<currentVersion>/<install><file><name>
                 // to temp directory.
-                updateClient.downloadFile(updateResulting.source +
-                                          "/" + updateResulting.platform +
-                                          "/" + updateResulting.currentVersion +
-                                          "/" + file.fileName);
+                updateClient.downloadFile(updateResulting->source.toString() +
+                                          "/" + updateResulting->platform +
+                                          "/" + updateResulting->currentVersion,
+                                          tempDirectory,
+                                          file.fileName);
 
-                //10.2.  Check file size and file hash.
+                //9.2.  Check file size and file hash.
                 //  If file size or hash invalid, go to Step 10.1. with the same file name.
                 //  If check fails N times, show message "Update error." and exit.
-                if (UpdateClient.isFileValid(tempDirectory, file))
+                if (updateClient.isFileValid(tempDirectory, file))
                     break;
             }
         }
 
-        //11. Move all files to temp directory for result update.
-        foreach(FileInfo file, updateResulting.files)
+        //10. Move all files to temp directory for result update.
+        foreach(FileInfo file, updateResulting->files)
         {
             updateClient.moveFile(tempDirectory, tempResultDirectory, file.fileName);
         }
 
-        //12. Rename update-resulting.xml to update-current.xml and copy to application
+        //11. Rename update-resulting.xml to update-current.xml and copy to application
         //      directory.
         updateClient.copyFile(tempDirectory, applicationDirectory, "update.xml", "update-current.xml");
 
-        //13. Go to Step 1.
+        //cleanup
+        if (updateCurrent)
+        {
+            delete updateCurrent;
+            updateCurrent = NULL;
+        }
+        if (updateLatest)
+        {
+            delete updateLatest;
+            updateLatest = NULL;
+        }
+        if (updateResulting)
+        {
+            delete updateResulting;
+            updateResulting = NULL;
+        }
+        //12. Go to Step 1.
     }
 
-    QMessageBox::information(nullptr,
-                             tr("Update ready"),
-                             tr("Please restart application to complete update process"),
+    QMessageBox::information(NULL,
+                             QObject::tr("Update ready"),
+                             QObject::tr("Please restart application to complete update process"),
                              QMessageBox::Ok);
 
-    //14. Wait for application exiting.
+    //13. Wait for application exiting.
     if (application->state() == QProcess::Running)
         application->waitForFinished(-1);
 
-    //15. Copy all files from temp directory for result update to application
+    //14. Copy all files from temp directory for result update to application
     // directory.
     updateClient.copyFiles(tempResultDirectory, applicationDirectory);
 

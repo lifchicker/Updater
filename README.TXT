@@ -75,28 +75,26 @@ UPDATE PROCESS:
 
 8.  If flag "installUpdates" is false, exit.
 
-9.  Read list of files from update-resulting.xml
+9. For each file do
 
-10. For each file do
-
-10.1.  Download file from
+9.1.  Download file from
          <update><source>/<platform>/<currentVersion>/<install><file><name>
        to temp directory.
 
-10.2.  Check file size and file hash.
+9.2.  Check file size and file hash.
        If file size or hash invalid, go to Step 10.1. with the same file name.
        If check fails N times, show message "Update error." and exit.
 
-11. Move all files to temp directory for result update.
+10. Move all files to temp directory for result update.
 
-12. Rename update-resulting.xml to update-current.xml and copy to application
+11. Rename update-resulting.xml to update-current.xml and copy to application
       directory.
 
-13. If not all needed versions downloaded, go to Step 1.
+12. If not all needed versions downloaded, go to Step 1.
 
-14. Wait for application exiting.
+13. Wait for application exiting.
 
-15. Copy all files from temp directory for result update to application
+14. Copy all files from temp directory for result update to application
       directory.
 
 
@@ -112,10 +110,12 @@ UPDATE PROCESS:
  <source>http://update/url</source>
 
  <application-main-binary>
-  <name>$APP_FILENAME</name>
-  <size></size>
-  <hash></hash>
-  <permissions></permissions>
+  <file>
+    <name>$APP_FILENAME</name>
+    <size></size>
+    <hash></hash>
+    <permissions></permissions>
+  </file>
  </application-main-binary>
 
  <install>

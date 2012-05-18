@@ -8,12 +8,17 @@
 
 #include <unistd.h>
 
+#if (defined(__MINGW32__))
+  #include <windows.h>
+  #define sleep(n) Sleep(1000 * n)
+#endif
+
 UpdateClient::UpdateClient(QObject *parent) :
     QObject(parent)
 {
 }
 
-inline bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const QString &fileName)
+bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const QString &fileName)
 {
     return copyFile(srcDir, destDir, fileName, fileName);
 }
@@ -156,7 +161,7 @@ bool UpdateClient::isFileValid(const QString &path, const FileInfo &fileInfo)
 }
 
 
-inline bool UpdateClient::moveFile(const QString &srcDir, const QString &destDir, const QString &fileName)
+bool UpdateClient::moveFile(const QString &srcDir, const QString &destDir, const QString &fileName)
 {
     return moveFile(srcDir, destDir, fileName, fileName);
 }

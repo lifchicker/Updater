@@ -36,12 +36,12 @@ class UpdateClient : public QObject
 public:
     explicit UpdateClient(QObject *parent = 0);
     
-    inline bool copyFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    bool        copyFile(const QString& srcDir, const QString& destDir, const QString& fileName);
     bool        copyFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
     bool        copyFiles(const QDir &srcDir, const QDir &destDir);
     bool        downloadFile(const QUrl&url, const QString &destination, const QString &fileName);
     bool        isFileValid(const QString& path, const FileInfo& fileInfo);
-    inline bool moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
+    bool        moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
     bool        moveFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
     UpdateFile *readUpdateFile(const QString& fileName);
 

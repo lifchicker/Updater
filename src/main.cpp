@@ -20,6 +20,8 @@ void readUpdateFileErrorMessage()
 
 int main(int argc, char *argv[])
 {
+    QApplication app(argc, argv);
+
     bool updateCompleted = false;
 
     bool installUpdates = false;

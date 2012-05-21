@@ -1,4 +1,9 @@
 ================================================================================
+                           About
+
+Updater is an update application and tools for your software.
+
+================================================================================
 
                            UPDATE USAGE HOW TO
 
@@ -102,38 +107,40 @@ UPDATE PROCESS:
 ================================================================================
                            SIMPLE UPDATE FILE
 
-<?xml version="1.0"?>
-<update>
- <currentVersion>1.0.1</currentVersion>
- <previousVersion>1.0.0</previousVersion>
- <platform>windows</platform>
- <source>http://update/url</source>
-
- <application-main-binary>
-  <file>
-    <name>$APP_FILENAME</name>
-    <size></size>
-    <hash></hash>
-    <permissions></permissions>
-  </file>
- </application-main-binary>
-
- <install>
-  <file>
-   <name>$APP_FILENAME</name>
-   <hash>$UPDATED_APP_HASH</hash>
-   <size>$UPDATED_APP_SIZE</size>
-   <permissions>0755</permissions>
-  </file>
-  <file>
-   <name>$UPDATER_FILENAME</name>
-   <hash>$UPDATER_HASH</hash>
-   <size>$UPDATER_SIZE</size>
-   <permissions>0755</permissions>
-  </file>
- </install>
- <uninstall>
-  <!-- TODO - List some files to uninstall here !-->
-  <file>file-to-uninstall.txt</file>
- </uninstall>
-</update>
+<?xml version="1.0" ?>
+   <update>
+    <currentVersion>1.0.1</currentVersion>
+    <previousVersion>1.0.0</previousVersion>
+    <platform>windows</platform>
+    <source>http://update.your.app/url</source>
+    
+    <application-main-binary>
+     <file>
+      <name>app.exe</name>
+      <size>23049</size>
+      <hash>a627ac81657487dc4206bb0d28d1699a</hash>
+      <permissions>0755</permissions>
+     </file>
+    </application-main-binary>
+    
+    <install>
+     <file>
+      <name>app.exe</name>
+      <size>23049</size>
+      <hash>a627ac81657487dc4206bb0d28d1699a</hash>
+      <permissions>0755</permissions>
+     </file>
+     <file>
+      <name>README.txt</name>
+      <size>16</size>
+      <hash>bb25ef10dafca9498ba827000e834382</hash>
+      <permissions>0644</permissions>
+     </file>
+     <file>
+      <name>directory/file.txt</name>
+      <size>26</size>
+      <hash>c1d0fe90d578084dbcf2d5b0b5d63413</hash>
+      <permissions>0644</permissions>
+     </file>
+    </install>
+   </update>

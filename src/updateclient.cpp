@@ -83,7 +83,7 @@ bool UpdateClient::copyFiles(const QDir &srcDir, const QDir &destDir)
             if (!nextDestDir.cd(entryInfo.fileName()))
             {
                 // create directory
-                nextDestDir.mkdir(entryInfo.fileName());
+                nextDestDir.mkpath(entryInfo.fileName());
 
                 //try change directory
                 if (!nextDestDir.cd(entryInfo.fileName()))

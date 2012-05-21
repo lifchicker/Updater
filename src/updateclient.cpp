@@ -1,5 +1,6 @@
 #include "updateclient.h"
 
+#include <QApplication>
 #include <QFile>
 #include <QDir>
 #include <QCryptographicHash>
@@ -114,16 +115,22 @@ bool UpdateClient::downloadFile(const QUrl &url, const QString &destination, con
     QString fullFileName = destination + "/" + fileName;
     QFile   *file        = new QFile(fullFileName);
 
+    if (!file->open(QIODevice::WriteOnly))
+    {
+        delete file;
+        file = 0;
+        return false;
+    }
+
     QUrl    fullUrl(url);
-    fullUrl.setPath(url.path() + fileName);
+    fullUrl.setPath(url.path() + "/" + fileName);
 
     http.setHost(fullUrl.host(), fullUrl.port(80));
     http.get(fullUrl.path(), file);
 
     while (http.currentId() != 0)
     {
-        //qApp->processEvents();
-        sleep(10);
+        qApp->processEvents();
     }
 
     file->close();
@@ -205,19 +212,19 @@ UpdateFile * UpdateClient::readUpdateFile(const QString &fileName)
             {
                 if (xml.name()      == "currentVersion")
                 {
-                    updateFile->currentVersion = xml.readElementText().toUtf8();
+                    updateFile->currentVersion = xml.readElementText().simplified().toUtf8();
                 }
                 else if (xml.name() == "previousVersion")
                 {
-                    updateFile->previousVersion = xml.readElementText().toUtf8();
+                    updateFile->previousVersion = xml.readElementText().simplified().toUtf8();
                 }
                 else if (xml.name() == "platform")
                 {
-                    updateFile->platform = xml.readElementText();
+                    updateFile->platform = xml.readElementText().simplified();
                 }
                 else if (xml.name() == "source")
                 {
-                    updateFile->source = QUrl(xml.readElementText());
+                    updateFile->source = QUrl(xml.readElementText().simplified());
                 }
                 else if (xml.name() == "application-main-binary")
                 {
@@ -263,15 +270,15 @@ FileInfo UpdateClient::readFileInfo(QXmlStreamReader &xml)
     {
         if (xml.name()      == "name")
         {
-            fileInfo.fileName = xml.readElementText();
+            fileInfo.fileName = xml.readElementText().simplified();
         }
         else if (xml.name() == "size")
         {
-            fileInfo.size = xml.readElementText().toLongLong();
+            fileInfo.size = xml.readElementText().simplified().toLongLong();
         }
         else if (xml.name() == "hash")
         {
-            fileInfo.hash = xml.readElementText().toUtf8();
+            fileInfo.hash = xml.readElementText().simplified().toUtf8();
         }
         else
             xml.skipCurrentElement();

@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QFile>
+#include <QFileInfo>
 #include <QDir>
 #include <QCryptographicHash>
 #include <QHttp>
@@ -114,6 +115,9 @@ bool UpdateClient::downloadFile(const QUrl &url, const QString &destination, con
     QHttp   http;
     QString fullFileName = destination + "/" + fileName;
     QFile   *file        = new QFile(fullFileName);
+    QFileInfo   filePath(fullFileName);
+
+    QDir("/").mkpath(QDir::cleanPath(filePath.absolutePath()));
 
     if (!file->open(QIODevice::WriteOnly))
     {
@@ -164,7 +168,7 @@ bool UpdateClient::isFileValid(const QString &path, const FileInfo &fileInfo)
     }
 
     // are files hashes equal?
-    return hasher.result() == fileInfo.hash;
+    return hasher.result().toHex() == fileInfo.hash;
 }
 
 

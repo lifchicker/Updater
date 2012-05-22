@@ -196,11 +196,12 @@ void MainApplication::executeUpdate()
                 //9.1.  Download file from
                 //  <update><source>/<platform>/<currentVersion>/<install><file><name>
                 // to temp directory.
-                updateClient.downloadFile(updateResulting->source.toString() +
-                                          "/" + updateResulting->platform +
-                                          "/" + updateResulting->currentVersion,
-                                          tempDirectory,
-                                          file.fileName);
+                if (!updateClient.downloadFile(updateResulting->source.toString() +
+                                               "/" + updateResulting->platform +
+                                               "/" + updateResulting->currentVersion,
+                                               tempDirectory,
+                                               file.fileName))
+                    continue;
 
                 //9.2.  Check file size and file hash.
                 //  If file size or hash invalid, go to Step 10.1. with the same file name.

@@ -25,6 +25,13 @@ void MainApplication::readUpdateFileErrorMessage()
                           QMessageBox::Ok);
 }
 
+void MainApplication::copyFileError(const QString &fileName)
+{
+    QMessageBox::critical(NULL,
+                          QObject::tr("Copy file error"),
+                          QObject::tr("Error occured while copying file ") + fileName.toUtf8(),
+                          QMessageBox::Ok);
+}
 
 void MainApplication::executeUpdate()
 {
@@ -211,15 +218,25 @@ void MainApplication::executeUpdate()
             }
         }
 
-        //10. Move all files to temp directory for result update.
-        foreach(FileInfo file, updateResulting->files)
+        //10. Rename update-resulting.xml to update-current.xml and copy to application
+        //      directory.
+        if (!updateClient.copyFile(tempDirectory, applicationDirectory, "update.xml", "update-current.xml"))
         {
-            updateClient.moveFile(tempDirectory, tempResultDirectory, file.fileName);
+            copyFileError("update-current.xml");
+            emit finished();
+            return;
         }
 
-        //11. Rename update-resulting.xml to update-current.xml and copy to application
-        //      directory.
-        updateClient.copyFile(tempDirectory, applicationDirectory, "update.xml", "update-current.xml");
+        //11. Move all files to temp directory for result update.
+        foreach(FileInfo file, updateResulting->files)
+        {
+            if (!updateClient.moveFile(tempDirectory, tempResultDirectory, file.fileName))
+            {
+                copyFileError(file.fileName);
+                emit finished();
+                return;
+            }
+        }
 
         //cleanup
         if (updateCurrent)
@@ -251,7 +268,13 @@ void MainApplication::executeUpdate()
 
     //14. Copy all files from temp directory for result update to application
     // directory.
-    updateClient.copyFiles(tempResultDirectory, applicationDirectory);
+    if (!updateClient.copyFiles(tempResultDirectory, applicationDirectory))
+    {
+        copyFileError("resultTempDirectory");
+        emit finished();
+        return;
+    }
+
 
     emit finished();
 }

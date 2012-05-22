@@ -15,5 +15,6 @@ signals:
     void finished();
 
 private:
+    void copyFileError(const QString &fileName);
     void readUpdateFileErrorMessage();
 };

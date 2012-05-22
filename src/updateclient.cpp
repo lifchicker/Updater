@@ -152,7 +152,10 @@ bool UpdateClient::downloadFile(const QUrl &url, const QString &destination, con
 bool UpdateClient::isFileValid(const QString &path, const FileInfo &fileInfo)
 {
     QFile file(QDir::cleanPath(path + QDir::separator() + fileInfo.fileName));
-    file.open(QFile::ReadOnly);
+    if (!file.open(QFile::ReadOnly))
+    {
+        return false;
+    }
 
     // are files sizes equal ?
     if (file.size() != fileInfo.size)
@@ -166,6 +169,8 @@ bool UpdateClient::isFileValid(const QString &path, const FileInfo &fileInfo)
     {
         hasher.addData(file.read(1024));
     }
+
+    file.close();
 
     // are files hashes equal?
     return hasher.result().toHex() == fileInfo.hash;
@@ -259,10 +264,14 @@ UpdateFile * UpdateClient::readUpdateFile(const QString &fileName)
             }
         }
         else
+        {
+            file.close();
             return NULL;
+        }
         //xml.raiseError(QObject::tr("The file is not an XBEL version 1.0 file."));
     }
 
+    file.close();
     return updateFile;
 }
 

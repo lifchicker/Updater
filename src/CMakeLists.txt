@@ -1,4 +1,10 @@
 
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 add_subdirectory(tests)
 
 find_package (Qt4 COMPONENTS QtCore QtGui QtNetwork REQUIRED)

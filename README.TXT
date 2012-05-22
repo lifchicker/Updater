@@ -90,10 +90,11 @@ UPDATE PROCESS:
        If file size or hash invalid, go to Step 10.1. with the same file name.
        If check fails N times, show message "Update error." and exit.
 
-10. Move all files to temp directory for result update.
 
-11. Rename update-resulting.xml to update-current.xml and copy to application
+10. Rename update-resulting.xml to update-current.xml and copy to application
       directory.
+
+11. Move all files to temp directory for result update.
 
 12. If not all needed versions downloaded, go to Step 1.
 

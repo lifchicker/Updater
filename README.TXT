@@ -47,6 +47,7 @@ C:\Documents and Settings\username\Local Settings\Temp\UPDATER_TEMP_DIR_NAME
 7.1. update.xml from full put to v1.0
 7.2. update.xml from diff put to v2.0
 7.3. update.xml from diff put to platform directory
+7.4. update.xml from full put to v1.0 installer as update-current.xml
 
 8. Upload all files to your update server
 

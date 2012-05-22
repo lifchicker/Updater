@@ -7,7 +7,9 @@
 
 #include "updateclient.h"
 
-#define APPLICATION_INSTALLER_URL "http://korobka.in/"
+#define APPLICATION_INSTALLER_URL       "http://korobka.in/"
+
+#define UPDATER_TEMP_DIR_NAME           "korobka-update"
 
 #define UPDATE_CURRENT_XML_READ_ERROR   1
 #define UPDATE_LATEST_XML_READ_ERROR    2
@@ -45,8 +47,8 @@ void MainApplication::executeUpdate()
     UpdateFile   *updateLatest = NULL;
     UpdateFile   *updateResulting = NULL;
 
-    QString tempDirectory = QDir::tempPath() + QDir::separator() + "Korobka-update";
-    QString tempResultDirectory = QDir::tempPath() + QDir::separator() + "Korobka-result-update";
+    QString tempDirectory = QDir::tempPath() + QDir::separator() + UPDATER_TEMP_DIR_NAME;
+    QString tempResultDirectory = QDir::tempPath() + QDir::separator() + UPDATER_TEMP_DIR_NAME + "-result";
     QString applicationDirectory = ".";
 
     if (!(QDir("/").mkpath(tempDirectory) && QDir("/").mkpath(tempResultDirectory)))

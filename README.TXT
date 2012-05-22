@@ -1,13 +1,59 @@
 ================================================================================
-                           About
+                                 ABOUT
 
-Updater is an update application and tools for your software.
+Updater is an update and launch application and tools for your software.
+Updater written on C++ with Qt libs usage.
+Tools written on Python.
 
 ================================================================================
+			    DEPENDENCIES
+1. CMake (minimal version 2.6)
+2. Qt (tested on 4.8.1). Required packages: QtCore, QtGui, QtNetwork.
+3. Python (tesed on 2.7.3)
 
-                           UPDATE USAGE HOW TO
+================================================================================
+                           HOW TO USE IT
 
-UPDATE PROCESS:
+1. Replace UPDATER_TEMP_DIR_NAME in mainapplication.cpp file by your 
+    application name.
+    All temp files will be stored in 
+C:\Documents and Settings\username\Local Settings\Temp\UPDATER_TEMP_DIR_NAME
+    folder on Windows and
+/tmp/UPDATER_TEMP_DIR_NAME
+    directory on Linux
+
+2. Build Updater:
+2.1. On Linux:
+	cd build
+	cmake -DCMAKE_BUILD_TYPE=Release ../
+	make
+2.2. Cross compilation for Windows under Linux:
+	cd build
+	./build
+	make
+2.3. On Windows : google how to compile Qt application via CMake.
+
+3. Put Updater to, for example, v1.0 and v2.0 of your application directory.
+
+4. Read tools/README.txt to know how to use tools/create-update-file.py
+
+5. Use tools/create-update-file.py to create full file list for v1.0
+    cd tools
+    ./create-update-file.py full
+
+6. Use tools/create-update-file.py to create diff from v1.0 and v2.0
+
+7. Put update.xml files to directories
+7.1. update.xml from full put to v1.0
+7.2. update.xml from diff put to v2.0
+7.3. update.xml from diff put to platform directory
+
+8. Upload all files to your update server
+
+For more information read section "UPDATE PROCESS".
+
+================================================================================
+				UPDATE PROCESS
 
 1.  UpdateClient downloads new update.xml from
     <update><source>/<platform>/update.xml url

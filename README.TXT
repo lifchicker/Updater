@@ -33,7 +33,8 @@ C:\Documents and Settings\username\Local Settings\Temp\UPDATER_TEMP_DIR_NAME
 	make
 2.3. On Windows : google how to compile Qt application via CMake.
 
-3. Put Updater to, for example, v1.0 and v2.0 of your application directory.
+3. Put Updater and all dependencies to, for example, v1.0 and v2.0 of
+    your application directory.
 
 4. Read tools/README.txt to know how to use tools/create-update-file.py
 

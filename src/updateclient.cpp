@@ -28,31 +28,31 @@ bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const
 
 bool UpdateClient::copyFile(const QString &srcDir, const QString &destDir, const QString &srcFileName, const QString &destFileName)
 {
-    QString sourceFile(QDir::cleanPath(srcDir + QDir::separator() + srcFileName));
-    QString destFile(QDir::cleanPath(destDir + QDir::separator() + destFileName));
+    QFileInfo sourceFile(QDir::cleanPath(srcDir + QDir::separator() + srcFileName));
+    QFileInfo destFile(QDir::cleanPath(destDir + QDir::separator() + destFileName));
 
     //if source file doesn't exists
-    if (!QFile::exists(sourceFile))
+    if (!QFile::exists(sourceFile.filePath()))
     {
         return false;
     }
 
     // check if dest directory not exists
-    if (!QDir(QDir::cleanPath(destDir)).exists())
+    if (!QDir(QDir::cleanPath(destFile.absolutePath())).exists())
     {
         // try to create dest dir
-        if (!QDir(QDir::rootPath()).mkpath(destDir))
+        if (!QDir(QDir::rootPath()).mkpath(destFile.absolutePath()))
             return false;
     }
 
     // if dest file exists
-    if (QFile::exists(destFile))
+    if (QFile::exists(destFile.filePath()))
     {
         // remove it (analog rewrite functionality)
-        QFile::remove(destFile);
+        QFile::remove(destFile.filePath());
     }
 
-    return QFile::copy(sourceFile, destFile);
+    return QFile::copy(sourceFile.filePath(), destFile.filePath());
 }
 
 
@@ -117,7 +117,7 @@ bool UpdateClient::downloadFile(const QUrl &url, const QString &destination, con
     QFile   *file        = new QFile(fullFileName);
     QFileInfo   filePath(fullFileName);
 
-    QDir("/").mkpath(QDir::cleanPath(filePath.absolutePath()));
+    QDir(QDir::rootPath()).mkpath(QDir::cleanPath(filePath.absolutePath()));
 
     if (!file->open(QIODevice::WriteOnly))
     {

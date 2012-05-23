@@ -104,72 +104,57 @@ void MainApplication::executeUpdate()
         //      <update><source>/<platform>/update.xml
         //    to temp directory and say it update-latest.xml
         QString updateLatestFileName = "update.xml";
-        updateClient.downloadFile(updateCurrent->source.toString() +
-                                  "/" + updateCurrent->platform,
-                                  tempDirectory,
-                                  updateLatestFileName);
+        QString updateFileUrl = updateCurrent->source.toString() + "/" + updateCurrent->platform;
 
-        //3.  Read header from update-latest.xml
-        updateLatest = updateClient.readUpdateFile(tempDirectory + QDir::separator() + updateLatestFileName);
-        if (!updateLatest)
+        do
         {
-            readUpdateFileErrorMessage();
-            qApp->exit(UPDATE_LATEST_XML_READ_ERROR);
-        }
+            updateClient.downloadFile(updateFileUrl,
+                                      tempDirectory,
+                                      updateLatestFileName);
 
-        //4.  Compare <currentVersion> from update-latest.xml and update-current.xml.
-        if (updateLatest->currentVersion == updateCurrent->currentVersion)
-        {
-            //        QMessageBox::information(NULL,
-            //                                 QObject::tr("No updates"),
-            //                                 QObject::tr("No updates."),
-            //                                 QMessageBox::Ok);
-
-            // if updating from previous versions
-            if (installUpdates && !updateCompleted)
+            //3.  Read header from update-latest.xml
+            updateLatest = updateClient.readUpdateFile(tempDirectory + QDir::separator() + updateLatestFileName);
+            if (!updateLatest)
             {
-                // complete update process
-                updateCompleted = true;
-                continue;
+                readUpdateFileErrorMessage();
+                qApp->exit(UPDATE_LATEST_XML_READ_ERROR);
             }
-            // if "installUpdates" is false, it indicates about there is no updates found therefore exit
-            else
+
+            //4.  Compare <currentVersion> from update-latest.xml and update-current.xml.
+            if (updateLatest->currentVersion == updateCurrent->currentVersion)
             {
-                //exit
-                //qApp->exit();
-                emit finished();
-                return;
+                //        QMessageBox::information(NULL,
+                //                                 QObject::tr("No updates"),
+                //                                 QObject::tr("No updates."),
+                //                                 QMessageBox::Ok);
+
+                // if updating from previous versions
+                if (installUpdates && !updateCompleted)
+                {
+                    // complete update process
+                    updateCompleted = true;
+                }
+                // if "installUpdates" is false, it indicates about there is no updates found therefore exit
+                else
+                {
+                    //exit
+                    //qApp->exit();
+                    emit finished();
+                    return;
+                }
             }
-        }
 
-        //5.  Check <currentVersion> of update-current.xml and <previousVersion> from
-        //    update-latest.xml file.
-        //    If versions are equal say update-latest.xml as update-resulting.xml and
-        //    go to Step 7.
-        if (updateCurrent->currentVersion != updateLatest->previousVersion)
-        {
-            // put code for update from previous ( N times repeat) version
-
+            //5.  Check <currentVersion> of update-current.xml and <previousVersion> from
+            //    update-latest.xml file.
+            //    If versions are equal say update-latest.xml as update-resulting.xml and
+            //    go to Step 7.
             //6.1.  If versions doesn't equal, download previous version of update.xml from
             //        <update><source>/<platform>/<previousVersion>/update.xml
             //      and say it as update-latest.xml
-
+            updateFileUrl = updateLatest->source.toString() + "/" + updateCurrent->platform + "/" + updateLatest->previousVersion;
             //6.2.  Go to Step 3.
-
-            QMessageBox::critical(NULL,
-                                  QObject::tr("Update is not incremental"),
-                                  QObject::tr("Current version is step aside from new version more then one update."
-                                              "Please, download and install full version of application from <a href=\""
-                                              APPLICATION_INSTALLER_URL
-                                              "\">"
-                                              APPLICATION_INSTALLER_URL
-                                              "</a>"),
-                                  QMessageBox::Ok);
-
-            //exit
-            emit finished();
-            return;
         }
+        while ((updateCurrent->currentVersion != updateLatest->previousVersion) && !updateCompleted);
 
         if (updateResulting)
         {

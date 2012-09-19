@@ -7,7 +7,7 @@
 #include <QCryptographicHash>
 #include <QHttp>
 #include <QXmlStreamReader>
-
+#include <QQueue>
 #include <unistd.h>
 
 #if (defined(__MINGW32__))
@@ -66,6 +66,8 @@ bool UpdateClient::copyFiles(const QDir &srcDir, const QDir &destDir)
     // list all directories
     QStringList entries = srcDir.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
 
+    QQueue<FileToCopyInfo> files;
+
     foreach (QString entry, entries)
     {
         QFileInfo entryInfo(QString("%1/%2").arg(srcDir.path()).arg(entry));
@@ -101,10 +103,28 @@ bool UpdateClient::copyFiles(const QDir &srcDir, const QDir &destDir)
         }
         else
         {
-            withoutErrors &= copyFile(srcDir.path(), destDir.path(), entryInfo.fileName());
+            FileToCopyInfo fileInfo;
+            fileInfo.srcDir = srcDir.path();
+            fileInfo.destDir = destDir.path();
+            fileInfo.fileName = entryInfo.fileName();
+            files.enqueue(fileInfo);
         }
     }
 
+
+    int totalFilesCount = files.size();
+
+    while (!files.isEmpty())
+    {
+        FileToCopyInfo file = files.dequeue();
+        withoutErrors &= copyFile(file.srcDir, file.destDir, file.fileName);
+
+        if (withoutErrors)
+        {
+            emit progressUpdated((int)(100.0*(1.0 - (float)files.size()/(float)totalFilesCount)));
+            QApplication::processEvents();
+        }
+    }
 
     return withoutErrors;
 }
@@ -273,6 +293,42 @@ UpdateFile * UpdateClient::readUpdateFile(const QString &fileName)
 
     file.close();
     return updateFile;
+}
+
+bool UpdateClient::removeDirectory(const QString &dir)
+{
+    bool deleted;
+    QDir directory(dir);
+
+    if (directory.exists())
+    {
+        foreach (QFileInfo entryInfo,
+                 directory.entryInfoList(QDir::NoDotAndDotDot |
+                                         QDir::System |
+                                         QDir::Hidden |
+                                         QDir::AllDirs |
+                                         QDir::Files,
+                                         QDir::DirsFirst))
+        {
+            if (entryInfo.isDir())
+            {
+                deleted = removeDirectory(entryInfo.absoluteFilePath());
+            }
+            else
+            {
+                deleted = QFile::remove(entryInfo.absoluteFilePath());
+            }
+
+            if (!deleted)
+            {
+                return deleted;
+            }
+        }
+
+        deleted = directory.rmdir(dir);
+    }
+
+    return deleted;
 }
 
 FileInfo UpdateClient::readFileInfo(QXmlStreamReader &xml)

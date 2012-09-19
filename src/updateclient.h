@@ -19,6 +19,13 @@ struct FileInfo
 };
 
 
+struct FileToCopyInfo
+{
+    QString srcDir;
+    QString destDir;
+    QString fileName;
+};
+
 struct UpdateFile
 {
     QByteArray          currentVersion;
@@ -44,9 +51,11 @@ public:
     bool        moveFile(const QString& srcDir, const QString& destDir, const QString& fileName);
     bool        moveFile(const QString& srcDir, const QString& destDir, const QString& srcFileName, const QString& destFileName);
     UpdateFile *readUpdateFile(const QString& fileName);
+    bool        removeDirectory(const QString& dir);
 
 signals:
-    
+    void progressUpdated(int progress);
+
 public slots:
 
 private:

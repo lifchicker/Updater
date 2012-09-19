@@ -6,6 +6,7 @@
 #include <QProcess>
 
 #include "updateclient.h"
+#include "progressdialog.h"
 
 #define APPLICATION_INSTALLER_URL       "http://korobka.in/"
 
@@ -19,25 +20,34 @@ MainApplication::MainApplication(QObject *parent): QObject(parent)
 {
 }
 
-void MainApplication::readUpdateFileErrorMessage()
+void MainApplication::showReadUpdateFileErrorMessage()
 {
     QMessageBox::critical(NULL,
-                          QObject::tr("Read file error"),
-                          QObject::tr("Update file reading error"),
+                          QString::fromUtf8("Ошибка чтения файла"),
+                          QString::fromUtf8("Ошибка чтения файла обновлений."),
                           QMessageBox::Ok);
 }
 
-void MainApplication::copyFileError(const QString &fileName)
+void MainApplication::showCopyFileError(const QString &fileName)
 {
     QMessageBox::critical(NULL,
-                          QObject::tr("Copy file error"),
-                          QObject::tr("Error occured while copying file ") + fileName.toUtf8(),
+                          QString::fromUtf8("Ошибка копирования файла"),
+                          QString::fromUtf8("Ошибка при копировании файла ") + fileName.toUtf8(),
+                          QMessageBox::Ok);
+}
+
+void MainApplication::showRemoveDirectoryError(const QString &directoryName)
+{
+    QMessageBox::critical(NULL,
+                          QString::fromUtf8("Ошибка удаления директории"),
+                          QString::fromUtf8("Ошибка при удалении директории ") + directoryName.toUtf8(),
                           QMessageBox::Ok);
 }
 
 void MainApplication::executeUpdate()
 {
     bool updateCompleted = false;
+    int  updatesCount = 0;
 
     bool installUpdates = false;
 
@@ -49,14 +59,14 @@ void MainApplication::executeUpdate()
 
     QString tempDirectory = QDir::tempPath() + QDir::separator() + UPDATER_TEMP_DIR_NAME;
     QString tempResultDirectory = QDir::tempPath() + QDir::separator() + UPDATER_TEMP_DIR_NAME + "-result";
-    QString applicationDirectory = ".";
+    QString updaterDirectory = QDir::currentPath();
 
     if (!(QDir("/").mkpath(tempDirectory) && QDir("/").mkpath(tempResultDirectory)))
     {
         QMessageBox::critical(NULL,
-                              QObject::tr("Directory creation error"),
-                              QObject::tr("Can't create temp directory in " + tempDirectory.toUtf8() + "\n" +
-                                          "Update failed."),
+                              QString::fromUtf8("Ошибка создания директории"),
+                              QString::fromUtf8("Ошибка при создании временной директории " + tempDirectory.toUtf8() + "\n" +
+                                          "Программа не будет обновлена."),
                               QMessageBox::Ok);
         //qApp->exit(TEMP_DIR_CREATION_FAILED);
         emit finished();
@@ -67,7 +77,7 @@ void MainApplication::executeUpdate()
     updateCurrent = updateClient.readUpdateFile("update-current.xml");
     if (!updateCurrent)
     {
-        readUpdateFileErrorMessage();
+        showReadUpdateFileErrorMessage();
         //qApp->exit(UPDATE_CURRENT_XML_READ_ERROR);
         emit finished();
         return;
@@ -75,13 +85,18 @@ void MainApplication::executeUpdate()
 
     //start the application
     QProcess * application = new QProcess();
-    application->start(updateCurrent->mainBinary.fileName);
+    QDir applicationDirectory(updaterDirectory);
+    applicationDirectory.cdUp();
+    application->setWorkingDirectory(applicationDirectory.path());
+    application->start(applicationDirectory.path() + QDir::separator() + updateCurrent->mainBinary.fileName);
     if (!application->waitForStarted())
     {
         QMessageBox::warning(NULL,
-                             QObject::tr("Warning"),
-                             QObject::tr("Application doesn't started."),
+                             QString::fromUtf8("Внимание"),
+                             QString::fromUtf8("Приложение НЕ запущено."),
                              QMessageBox::Ok);
+        emit finished();
+        return;
     }
 
     while (!updateCompleted)
@@ -93,7 +108,7 @@ void MainApplication::executeUpdate()
             updateCurrent = updateClient.readUpdateFile("update-current.xml");
             if (!updateCurrent)
             {
-                readUpdateFileErrorMessage();
+                showReadUpdateFileErrorMessage();
                 //qApp->exit(UPDATE_CURRENT_XML_READ_ERROR);
                 emit finished();
                 return;
@@ -116,18 +131,14 @@ void MainApplication::executeUpdate()
             updateLatest = updateClient.readUpdateFile(tempDirectory + QDir::separator() + updateLatestFileName);
             if (!updateLatest)
             {
-                readUpdateFileErrorMessage();
-                qApp->exit(UPDATE_LATEST_XML_READ_ERROR);
+                showReadUpdateFileErrorMessage();
+                emit finished();
+                return;
             }
 
             //4.  Compare <currentVersion> from update-latest.xml and update-current.xml.
             if (updateLatest->currentVersion == updateCurrent->currentVersion)
             {
-                //        QMessageBox::information(NULL,
-                //                                 QObject::tr("No updates"),
-                //                                 QObject::tr("No updates."),
-                //                                 QMessageBox::Ok);
-
                 // if updating from previous versions
                 if (installUpdates && !updateCompleted)
                 {
@@ -138,7 +149,6 @@ void MainApplication::executeUpdate()
                 else
                 {
                     //exit
-                    //qApp->exit();
                     emit finished();
                     return;
                 }
@@ -152,6 +162,21 @@ void MainApplication::executeUpdate()
             //        <update><source>/<platform>/<previousVersion>/update.xml
             //      and say it as update-latest.xml
             updateFileUrl = updateLatest->source.toString() + "/" + updateCurrent->platform + "/" + updateLatest->previousVersion;
+
+            // if version older than 5 versions odd
+            // exit updater
+            updatesCount++;
+            if (updatesCount > 5)
+            {
+                QMessageBox::critical(NULL,
+                                      QString::fromUtf8("Версия сильно устарела"),
+                                      QString::fromUtf8("Версия вашего программного обеспечения сильно устарела.\n") +
+                                      QString::fromUtf8("Пожалуйста, зайдите на сайт вашего ПО и скачайте последнюю версию."),
+                                      QMessageBox::Ok);
+                //exit
+                emit finished();
+                return;
+            }
             //6.2.  Go to Step 3.
         }
         while ((updateCurrent->currentVersion != updateLatest->previousVersion) && !updateCompleted);
@@ -169,8 +194,8 @@ void MainApplication::executeUpdate()
         if (!installUpdates)
         {
             installUpdates = QMessageBox::Yes == QMessageBox::question(NULL,
-                                                                       QObject::tr("New version found"),
-                                                                       QObject::tr("New version is available. Update?"),
+                                                                       QString::fromUtf8("Найдена новая версия"),
+                                                                       QString::fromUtf8("Доступна новая версия. Обновить?"),
                                                                        QMessageBox::Yes | QMessageBox::No);
 
             //8.  If flag "installUpdates" is false, exit.
@@ -207,9 +232,9 @@ void MainApplication::executeUpdate()
 
         //10. Rename update-resulting.xml to update-current.xml and copy to application
         //      directory.
-        if (!updateClient.copyFile(tempDirectory, applicationDirectory, "update.xml", "update-current.xml"))
+        if (!updateClient.copyFile(tempDirectory, updaterDirectory, "update.xml", "update-current.xml"))
         {
-            copyFileError("update-current.xml");
+            showCopyFileError("update-current.xml");
             emit finished();
             return;
         }
@@ -219,7 +244,7 @@ void MainApplication::executeUpdate()
         {
             if (!updateClient.moveFile(tempDirectory, tempResultDirectory, file.fileName))
             {
-                copyFileError(file.fileName);
+                showCopyFileError(file.fileName);
                 emit finished();
                 return;
             }
@@ -245,8 +270,8 @@ void MainApplication::executeUpdate()
     }
 
     QMessageBox::information(NULL,
-                             QObject::tr("Update ready"),
-                             QObject::tr("Please restart application to complete update process"),
+                             QString::fromUtf8("Обновления готовы"),
+                             QString::fromUtf8("Пожалуйста, перезапустите приложение для применения обновлений."),
                              QMessageBox::Ok);
 
     //13. Wait for application exiting.
@@ -255,12 +280,28 @@ void MainApplication::executeUpdate()
 
     //14. Copy all files from temp directory for result update to application
     // directory.
-    if (!updateClient.copyFiles(tempResultDirectory, applicationDirectory))
+    ProgressDialog progressDialog;
+    connect(&updateClient, SIGNAL(progressUpdated(int)), progressDialog.getProgressBar(), SLOT(setValue(int)));
+    progressDialog.show();
+
+    if (!updateClient.copyFiles(tempResultDirectory, applicationDirectory.path()))
     {
-        copyFileError("resultTempDirectory");
+        showCopyFileError("resultTempDirectory");
         emit finished();
         return;
     }
+
+    if (!updateClient.removeDirectory(tempDirectory))
+    {
+        showRemoveDirectoryError(tempDirectory);
+    }
+
+    if (!updateClient.removeDirectory(tempResultDirectory))
+    {
+        showRemoveDirectoryError(tempResultDirectory);
+    }
+
+    progressDialog.close();
 
 
     emit finished();

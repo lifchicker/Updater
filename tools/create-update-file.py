@@ -8,13 +8,13 @@ from xml.dom.minidom import Document
 from sets import Set
 
 class MakeXML:
-    APP_FILE_PATH        = "app_name"
-    CURRENT_VERSION_PATH = "/full/path/to/current/version"
-    PREVIOUS_VERSION_PATH= "/full/path/to/previous/version"
-    CURRENT_VERSION      = "1.1"
-    PREVIOUS_VERSION     = "1.0"
-    PLATFORM             = "Linux"
-    SOURCE               = "http://update.your.app/url"
+    APP_FILE_PATH        = "korobka-qt.exe"
+    CURRENT_VERSION_PATH = "/home/lh/src/work/dc-client/updates/windows/1.1.0"
+    PREVIOUS_VERSION_PATH= "/home/lh/src/work/dc-client/updates/windows/1.1.0"
+    CURRENT_VERSION      = "1.1.0"
+    PREVIOUS_VERSION     = "1.1.0"
+    PLATFORM             = "windows"
+    SOURCE               = "http://update.korobka.in/updates/korobka"
 
     def __init__(self):
         pass

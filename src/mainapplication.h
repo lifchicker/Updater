@@ -15,6 +15,7 @@ signals:
     void finished();
 
 private:
-    void copyFileError(const QString &fileName);
-    void readUpdateFileErrorMessage();
+    void showCopyFileError(const QString &fileName);
+    void showReadUpdateFileErrorMessage();
+    void showRemoveDirectoryError(const QString &directoryName);
 };

@@ -16,10 +16,17 @@ set (QT_USE_QTNETWORK TRUE)
 
 set (SOURCES_UPDATECLIENT
   updateclient.cpp
+  progressdialog.cpp
 )
 
 set (HEADERS_UPDATECLIENT
   updateclient.h
+  progressdialog.h
+  ui_progressdialog.h
+)
+
+set (UI_FORMS 
+  progressdialog.ui
 )
 
 set (SOURCES_MAINAPPLICATION
@@ -36,12 +43,13 @@ set (RESOURCE_PATH
 include_directories (${CMAKE_BINARY_DIR} ${QT_INCLUDE_DIR} ${QT_QTNETWORK_INCLUDE_DIR})
 
 qt4_wrap_cpp (MOC_SOURCES ${HEADERS_UPDATECLIENT} ${HEADERS_MAINAPPLICATION})
+qt4_wrap_ui (UI_SOURCES ${UI_FORMS})
 
 if (WIN32)
         set(EXE_FLAGS WIN32 resources/updater.rc)
 endif()
 
-add_library (updateclient ${MOC_SOURCES} ${HEADERS_UPDATECLIENT} ${HEADERS_MAINAPPLICATION} ${SOURCES_UPDATECLIENT} ${SOURCES_MAINAPPLICATION})
+add_library (updateclient ${MOC_SOURCES} ${HEADERS_UPDATECLIENT} ${HEADERS_MAINAPPLICATION} ${SOURCES_UPDATECLIENT} ${SOURCES_MAINAPPLICATION} ${UI_SOURCES})
 
 if (UNIX)
   set (UNIX_LIBS pthread dl)
